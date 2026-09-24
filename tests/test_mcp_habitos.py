@@ -1,8 +1,10 @@
+import json
 import pytest
 from mcp.server.fastmcp import FastMCP
 from app.mcp.tools.habitos import registrar_tools
 from app.database import Base, SessionLocal, engine
 from app.models.usuario import Usuario
+from app.models.habito import Habito, RegistroHabito
 
 
 @pytest.fixture(autouse=True)
@@ -10,6 +12,8 @@ def setup_db():
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         # Limpiar datos anteriores
+        db.query(RegistroHabito).delete()
+        db.query(Habito).delete()
         db.query(Usuario).delete()
         db.commit()
     yield
@@ -56,20 +60,27 @@ async def test_mcp_crear_habito_exito_y_error_negocio(mcp_app):
 @pytest.mark.asyncio
 async def test_mcp_listar_marcar_y_eliminar_confirmado(mcp_app):
     # Crear hábito
-    await mcp_app.call_tool("crear_habito", {"nombre": "Rutina Mañana", "frecuencia_objetivo": 7})
+    res_crear = await mcp_app.call_tool("crear_habito", {"nombre": "Rutina Mañana", "frecuencia_objetivo": 7})
+    if isinstance(res_crear, list) and hasattr(res_crear[0], "text"):
+        creado = json.loads(res_crear[0].text)
+    elif isinstance(res_crear, dict):
+        creado = res_crear
+    else:
+        creado = json.loads(str(res_crear))
+    habito_id = creado["id"]
 
     # Listar
     lista = await mcp_app.call_tool("listar_habitos", {"skip": 0, "limit": 10})
     assert "Rutina Mañana" in str(lista)
 
-    # Marcar hábito (id 1)
-    marca = await mcp_app.call_tool("marcar_habito", {"habito_id": 1})
+    # Marcar hábito
+    marca = await mcp_app.call_tool("marcar_habito", {"habito_id": habito_id})
     assert marca is not None
 
     # Error en marcar repetido hoy (R4)
-    marca_dup = await mcp_app.call_tool("marcar_habito", {"habito_id": 1})
+    marca_dup = await mcp_app.call_tool("marcar_habito", {"habito_id": habito_id})
     assert "error" in str(marca_dup).lower() or "marcado" in str(marca_dup).lower()
 
     # Eliminar con confirmación
-    res_elim = await mcp_app.call_tool("eliminar_habito", {"habito_id": 1, "confirmar": True})
+    res_elim = await mcp_app.call_tool("eliminar_habito", {"habito_id": habito_id, "confirmar": True})
     assert "eliminado" in str(res_elim).lower()
