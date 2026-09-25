@@ -1,4 +1,17 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
+
+
+def utc_a_local(momento: datetime | None) -> datetime | None:
+    """
+    Los timestamps se guardan en UTC, pero SQLite los devuelve sin zona horaria.
+    Se marca como UTC y se convierte a la hora local del servidor, con offset explícito
+    (p. ej. 2026-09-24T22:33:38-05:00), para que no aparenten ser del día siguiente.
+    """
+    if momento is None:
+        return None
+    if momento.tzinfo is None:
+        momento = momento.replace(tzinfo=timezone.utc)
+    return momento.astimezone()
 
 
 def obtener_fecha_hoy() -> date:

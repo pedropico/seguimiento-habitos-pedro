@@ -2,6 +2,7 @@ from datetime import date
 from sqlalchemy import select, and_, desc
 from sqlalchemy.orm import Session
 from app.models.habito import Habito, RegistroHabito
+from app.utils.fechas import utc_a_local
 
 
 def _habito_a_dict(habito: Habito | None) -> dict | None:
@@ -15,7 +16,7 @@ def _habito_a_dict(habito: Habito | None) -> dict | None:
         "nombre_normalizado": habito.nombre_normalizado,
         "frecuencia_objetivo": habito.frecuencia_objetivo,
         "activo": habito.activo,
-        "fecha_creacion": habito.fecha_creacion,
+        "fecha_creacion": utc_a_local(habito.fecha_creacion),
     }
 
 
@@ -27,7 +28,7 @@ def _registro_a_dict(registro: RegistroHabito | None) -> dict | None:
         "id": registro.id,
         "habito_id": registro.habito_id,
         "fecha": registro.fecha,
-        "fecha_registro": registro.fecha_registro,
+        "fecha_registro": utc_a_local(registro.fecha_registro),
     }
 
 

@@ -1,4 +1,5 @@
 from typing import Any
+from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.fastmcp import Context, FastMCP
 
 from app.config import settings
@@ -16,14 +17,11 @@ def _resolver_usuario_id(ctx: Context | None = None) -> int:
     - Simplificación consciente documentada: En transporte stdio (o cuando no hay token verificado
       en el contexto de la sesión), se recurre al usuario demo configurado en .env.
     """
-    # Intentar resolver desde claims del token verificado en contexto
-    if ctx is not None:
-        try:
-            client_id = getattr(ctx, "client_id", None)
-            if client_id:
-                return int(client_id)
-        except Exception:
-            pass
+    # Token verificado por JWTTokenVerifier. No usar ctx.client_id: sale del
+    # `_meta` que envía el cliente y permitiría suplantar a otro usuario.
+    token = get_access_token()
+    if token is not None and token.subject:
+        return int(token.subject)
 
     # Respaldo legítimo: buscar el usuario demo configurado
     with SessionLocal() as db:

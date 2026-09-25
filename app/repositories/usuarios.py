@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario
+from app.utils.fechas import utc_a_local
 
 
 def _usuario_a_dict(usuario: Usuario | None) -> dict | None:
@@ -11,7 +12,7 @@ def _usuario_a_dict(usuario: Usuario | None) -> dict | None:
         "id": usuario.id,
         "email": usuario.email,
         "hashed_password": usuario.hashed_password,
-        "fecha_creacion": usuario.fecha_creacion,
+        "fecha_creacion": utc_a_local(usuario.fecha_creacion),
     }
 
 

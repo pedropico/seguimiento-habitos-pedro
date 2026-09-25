@@ -10,10 +10,11 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    SECRET_KEY: str = "clave_secreta_por_defecto_para_tests_solamente_12345"
+    SECRET_KEY: str = "Ubicada en .env"
     DATABASE_URL: str = "sqlite:///./habitos.db"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     DEMO_USER_EMAIL: str = "demo@ejemplo.com"
+    MCP_ISSUER_URL: str = "http://localhost:8000"
 
 
 settings = Settings()

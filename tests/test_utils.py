@@ -1,6 +1,6 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from app.utils.texto import normalizar_nombre, limpiar_nombre_para_mostrar
-from app.utils.fechas import es_fecha_futura, a_formato_iso
+from app.utils.fechas import es_fecha_futura, a_formato_iso, utc_a_local
 
 
 def test_normalizar_nombre():
@@ -30,3 +30,14 @@ def test_a_formato_iso():
     d = date(2026, 9, 23)
     assert a_formato_iso(d) == "2026-09-23"
     assert a_formato_iso("2026-09-23") == "2026-09-23"
+
+
+def test_utc_a_local_conserva_el_instante_y_agrega_zona():
+    # Así devuelve SQLite un timestamp UTC: sin tzinfo.
+    naive_utc = datetime(2026, 9, 25, 3, 33, 38)
+    local = utc_a_local(naive_utc)
+
+    assert local.tzinfo is not None
+    assert local == naive_utc.replace(tzinfo=timezone.utc)  # mismo instante
+    assert local.utcoffset() == datetime.now().astimezone().utcoffset()
+    assert utc_a_local(None) is None
